@@ -7,10 +7,12 @@ export default class App extends Component {
     super(props);
     this.state = {
       persons: [],
+      id: "",
       firstName: "",
       lastName: "",
       nik: "",
-      kodePerson: ""
+      kodePerson: "",
+      button: "simpan"
     }
 
     this.personChange = this.personChange.bind(this)
@@ -40,9 +42,49 @@ export default class App extends Component {
 
     console.log(person)
 
-    axios.post('http://localhost:8080/person/post-person-status', person)
+    if (this.state.button === "simpan") {
+      axios.post('http://localhost:8080/person/post-person-status', person)
+        .then((response) => {
+          console.log(response);
+        })
+    } else {
+      this.editPerson(this.state.id)
+    }
+  }
+
+  getEditPerson = (id) => {
+    axios.get('http://localhost:8080/person/by-id/' + id)
+      .then((res) => {
+        console.log(res);
+        this.setState({
+          id: res.data.id,
+          firstName: res.data.firstName,
+          lastName: res.data.lastName,
+          nik: res.data.nik,
+          kodePerson: res.data.kodePerson,
+          button: "update"
+        })
+      })
+  }
+
+  editPerson = (id) => {
+    const person = {
+      firstName: this.state.firstName,
+      lastName: this.state.lastName,
+      nik: this.state.nik,
+      kodePerson: this.state.kodePerson
+    }
+
+    axios.put('http://localhost:8080/person/update-person/' + id, person)
       .then((response) => {
         console.log(response);
+      })
+  }
+
+  delete = (id) => {
+    axios.delete('http://localhost:8080/person/delete/' + id).then
+      (() => {
+        window.location.reload()
       })
   }
 
@@ -86,7 +128,7 @@ export default class App extends Component {
                 id="kodePerson" value={kodePerson} onChange={this.personChange}></input>
             </div>
             <button id="btn-save" className="btn btn-primary"
-              onClick={this.submitPerson}>Simpan</button>
+              onClick={this.submitPerson}>{this.state.button}</button>
           </form>
         </div><br></br>
 
@@ -99,6 +141,7 @@ export default class App extends Component {
                 <th>Last Name</th>
                 <th>NIK</th>
                 <th>Kode Person</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="body-person">
@@ -110,6 +153,10 @@ export default class App extends Component {
                     <td>{people.lastName}</td>
                     <td>{people.nik}</td>
                     <td>{people.kodePerson}</td>
+                    <td>
+                      <button className="btn btn-warning mr-2" id="btn-edit" onClick={() => this.getEditPerson(people.id)}>Edit</button>
+                      <button className="btn btn-danger" id="btn-delete" onClick={() => this.delete(people.id)}>Delete</button>
+                    </td>
                   </tr>
                 )
               })}
